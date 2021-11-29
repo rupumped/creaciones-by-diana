@@ -1,4 +1,4 @@
-import cv2, os
+import cv2, os, argparse
 
 def add_text(img,text,loc):
     BLACK = (0,0,0)
@@ -17,19 +17,26 @@ def shrink(img, scale=0.3):
     return cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
 
 if __name__ == '__main__':
+    # Argparse
+    parser = argparse.ArgumentParser(description='Assemble fabric catalog')
+    parser.add_argument('dir', type=str, help='directory containing photos of fabrics')
+    parser.add_argument('--s', metavar='s', type=int, default=1, help='start index for catalog')
+    parser.add_argument('--p', metavar='p', type=str, default='', help='prefix to add before number')
+    args = parser.parse_args()
+
     # Read image files
-    images = os.listdir('images')
+    images = os.listdir(args.dir)
     img_vec = []
     for i,img_file in enumerate(images):
-        img = cv2.imread('images/' + img_file)
+        img = cv2.imread(args.dir + '/' + img_file)
         w = img.shape[1]
         h = img.shape[0]
         c = (w-500,h-500)
-        r = 200
+        r = 300
         
         img = cv2.circle(img, c, r, (255,0,0), 60)
         img = cv2.circle(img, c, r, (255,255,255), -1)
-        img = add_text(img,str(i+1),c)
+        img = add_text(img,args.p+str(i+args.s),c)
 
         img_vec.append(shrink(img))
 
@@ -41,7 +48,7 @@ if __name__ == '__main__':
         i+= 3
 
     # Add white rectangles if necessary
-    if img_rows[-1].shape[1] != img_rows[-2].shape[1]:
+    if len(img_rows)>1 and img_rows[-1].shape[1] != img_rows[-2].shape[1]:
         img_rows[-1] = cv2.copyMakeBorder(img_rows[-1], 0, 0, 0, img_rows[-2].shape[1]-img_rows[-1].shape[1], cv2.BORDER_CONSTANT, value=[255,255,255])
 
     # Assemble rows into catalog
@@ -52,4 +59,4 @@ if __name__ == '__main__':
     key = cv2.waitKey(3000)
 
     # Save image
-    cv2.imwrite('catalog.jpg',img)
+    cv2.imwrite(args.dir + '.jpg',img)
