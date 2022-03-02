@@ -22,23 +22,28 @@ if __name__ == '__main__':
     parser.add_argument('dir', type=str, help='directory containing photos of fabrics')
     parser.add_argument('--s', metavar='s', type=int, default=1, help='start index for catalog')
     parser.add_argument('--p', metavar='p', type=str, default='', help='prefix to add before number')
+    parser.add_argument('-n', action='store_false')
     args = parser.parse_args()
 
     # Read image files
-    images = os.listdir(args.dir)
     img_vec = []
-    for i,img_file in enumerate(images):
-        img = cv2.imread(args.dir + '/' + img_file)
-        w = img.shape[1]
-        h = img.shape[0]
-        c = (w-500,h-500)
-        r = 300
-        
-        img = cv2.circle(img, c, r, (255,0,0), 60)
-        img = cv2.circle(img, c, r, (255,255,255), -1)
-        img = add_text(img,args.p+str(i+args.s),c)
+    ndx = 0
+    for dir in args.dir.split(','):
+        images = os.listdir(dir)
+        for i,img_file in enumerate(images):
+            img = cv2.imread(dir + '/' + img_file)
+            w = img.shape[1]
+            h = img.shape[0]
+            c = (w-500,h-500)
+            r = 300
+            
+            if args.n:
+                img = cv2.circle(img, c, r, (255,0,0), 60)
+                img = cv2.circle(img, c, r, (255,255,255), -1)
+                img = add_text(img,args.p+str(ndx+args.s),c)
+                ndx+= 1
 
-        img_vec.append(shrink(img))
+            img_vec.append(shrink(img))
 
     # Assemble images into rows
     img_rows = []
